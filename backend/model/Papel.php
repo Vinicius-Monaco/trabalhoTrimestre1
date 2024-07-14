@@ -1,6 +1,5 @@
 <?php
-include_once '../conexao.php';
-
+require '../conexao.php';
 class Papel {
   private $id;
   private $papel;
@@ -17,8 +16,17 @@ class Papel {
     $this->$id = $id;
   }
   public function salvarPapel() {
-    $conn = ConexaoBanco();
-    echo $conn;
+    $conn = conexao();
+    if ($this->id) {
+      $stmt = $conn->prepare("UPDATE papel SET papel = ? WHERE id = ?");
+      $stmt->bind_param("si", $this->papel, $this->id);
+    } else {
+      $stmt = $conn->prepare("INSERT INTO papel (papel) VALUES (?)");
+      $stmt->bind_param("s", $this->papel);
+    }
+    $stmt->execute();
+    $stmt->close();
+    $conn->close();
+    }
   }
-}
 ?>
