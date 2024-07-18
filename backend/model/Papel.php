@@ -1,5 +1,5 @@
 <?php
-require '../conexao.php';
+require '../Conexao.php';
 
 class Papel
 {
@@ -28,17 +28,16 @@ class Papel
 
   public function salvarPapel()
   {
-    $conn = conexao();
-    if ($this->id) {
-      $stmt = $conn->prepare("UPDATE papel SET papel = ? WHERE id = ?");
-      $stmt->bind_param("si", $this->papel, $this->id);
-    } else {
+    try {
+      $conexao = new Conexao();
+      $conn = $conexao->getConexao();
       $stmt = $conn->prepare("INSERT INTO papel (papel) VALUES (?)");
-      $stmt->bind_param("s", $this->papel);
+      $stmt->execute([$this->getPapel()]);
+    } catch (PDOException $th) {
+      echo "There is some problem in connection ". $th->getMessage();
+      return false;
     }
-    $stmt->execute();
-    $stmt->close();
-    $conn->close();
+    return true;
   }
 
   public function deletarPapel()
