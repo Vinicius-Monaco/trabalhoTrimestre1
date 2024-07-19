@@ -7,6 +7,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   echo $_POST['papel'];
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+  $papel = new Papel();
+  $papeis = $papel->listarPapeis();
+  foreach($papeis as $p) {
+    echo $p['papel'];
+  }
+}
+
 //   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 //     $papel = new Papel();
 //     $papel->setId($_POST['id']);

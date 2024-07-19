@@ -39,32 +39,11 @@ class Papel
     }
     return true;
   }
-
-  public function deletarPapel()
-  {
-    $conn = conexao();
-    if ($this->id) {
-      $stmt = $conn->prepare("DELETE FROM papel WHERE id = ?");
-      $stmt->bind_param("i", $this->id);
-      $stmt->execute();
-      $stmt->close();
-    }
-    $conn->close();
+  public function listarPapeis() {
+      $conexao = new Conexao();
+      $conn = $conexao->getConexao();
+      $stmt = $conn->query("SELECT papel FROM papel");
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+      }
   }
-
-  public static function listarPapeis()
-  {
-    $conn = conexao();
-    $stmt = $conn->prepare("SELECT id, papel FROM papel");
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $papeis = [];
-    while ($row = $result->fetch_assoc()) {
-      $papeis[] = $row;
-    }
-    $stmt->close();
-    $conn->close();
-    return $papeis;
-  }
-}
 ?>
