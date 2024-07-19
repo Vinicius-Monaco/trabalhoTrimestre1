@@ -34,16 +34,25 @@ class Papel
       $stmt = $conn->prepare("INSERT INTO papel (papel) VALUES (?)");
       $stmt->execute([$this->getPapel()]);
     } catch (PDOException $th) {
-      echo "There is some problem in connection ". $th->getMessage();
+      echo "There is some problem in connection " . $th->getMessage();
       return false;
     }
     return true;
   }
-  public function listarPapeis() {
-      $conexao = new Conexao();
-      $conn = $conexao->getConexao();
-      $stmt = $conn->query("SELECT papel FROM papel");
-      return $stmt->fetchAll(PDO::FETCH_ASSOC);
-      }
+  public function listarPapeis()
+  {
+    $conexao = new Conexao();
+    $conn = $conexao->getConexao();
+    $stmt = $conn->query("SELECT papel FROM papel");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
+  public function deletarPapel()
+  {
+    $conexao = new Conexao();
+    $conn = $conexao->getConexao();
+    $stmt = $conn->prepare("DELETE FROM papel WHERE id = :id");
+    $stmt->bindParam(":id", $this->getId());
+    $stmt->execute();
+  }
+}
 ?>

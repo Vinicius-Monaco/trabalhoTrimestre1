@@ -1,43 +1,27 @@
 <?php
 require '../model/Papel.php';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $papel = new Papel();
-  $papel->setPapel($_POST['papel']);
-  $papel->salvarPapel();
-  echo $_POST['papel'];
-}
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $acao = $_POST['acao'];
+
+  if ($acao == 'criar') {
+    $papel = new Papel();
+    $papel->setPapel($_POST['papel']);
+    $papel->salvarPapel();
+    echo json_encode(['status' => 'success', 'message' => 'Papel criado', 'papel' => $_POST['papel']]);
+  } elseif ($acao == 'deletar') {
+    $id = $_POST['id'];
+    $papel = new Papel();
+    $papel->deletarPapel($id);
+    echo json_encode(['status' => 'success', 'message' => 'Papel deletado', 'id' => $id]);
+  }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $papel = new Papel();
   $papeis = $papel->listarPapeis();
-  foreach($papeis as $p) {
-    echo $p['papel'];
-  }
+  echo json_encode($papeis);
+} else {
+  echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
 }
-
-//   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-//     $papel = new Papel();
-//     $papel->setId($_POST['id']);
-//     $papel->setPapel($_POST['papel']);
-//     $papel->salvarPapel();
-// }
-
-//   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-//     $papel = new Papel();
-//     $papel->setId($_POST['id']);
-//     $papel->deletarPapel();
-// }
-
-//   if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-//     return Papel::listarPapeis();
-//   }
-
-//   if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-//     $papeis = Papel::listarPapeis();
-//     foreach ($papeis as $papel) {
-//       if ($papel['id'] == $id) {
-//         return $papel;
-//       }
-//   }
-// }
 ?>
