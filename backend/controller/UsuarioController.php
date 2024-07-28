@@ -1,52 +1,72 @@
 <?php
 require '../model/Usuario.php';
 
-class UsuarioController {
-  public function criarUsuario() {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE, PUT");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json");
+
+$method = $_SERVER['REQUEST_METHOD'];
+
+try {
+  if ($method === 'POST' && isset($_POST['acao']) && $_POST['acao'] === 'login') {
+    $email = $_POST['emailLogin'] ?? '';
+    $senha = $_POST['senhaLogin'] ?? '';
+
+    if ($email && $senha) {
       $usuario = new Usuario();
-      $usuario->setNome($_POST['nome']);
-      $usuario->setEmail($_POST['email']);
-      $usuario->setSenha(password_hash($_POST['senha'], PASSWORD_DEFAULT));
-      $usuario->salvarUsuario();
+      $usuario->setEmail($email);
+      $resultado = $usuario->autenticar($senha);
+      echo json_encode($resultado);
+    } else {
+      echo json_encode(['status' => 'error', 'message' => 'Email ou senha ausentes']);
     }
   }
 
-  public function atualizarUsuario() {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-      $usuario = new Usuario();
-      $usuario->setId($_POST['id']);
-      $usuario->setNome($_POST['nome']);
-      $usuario->setEmail($_POST['email']);
-      $usuario->setSenha(password_hash($_POST['senha'], PASSWORD_DEFAULT));
-      $usuario->salvarUsuario();
-    }
-  }
+  if ($method === 'POST') {
+    $acao = $_POST['acao'] ?? '';
 
-  public function deletarUsuario() {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-      $usuario = new Usuario();
-      $usuario->setId($_POST['id']);
-      $usuario->deletarUsuario();
-    }
-  }
-
-  public function listarUsuarios() {
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-      return Usuario::listarUsuarios();
-    }
-  }
-
-  public function obterUsuarioPorId($id) {
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-      $usuarios = Usuario::listarUsuarios();
-      foreach ($usuarios as $usuario) {
-        if ($usuario['id'] == $id) {
-          return $usuario;
-        }
+    if ($acao === 'editar') {
+      $id = $_POST['id'] ?? '';
+      if ($id) {
+        $usuario = new Usuario();
+        $usuario->setId($id);
+        $usuario->setNome($_POST['nome'] ?? '');
+        $usuario->setEmail($_POST['email'] ?? '');
+        $usuario->setSenha(password_hash($_POST['senha'] ?? '', PASSWORD_DEFAULT));
+        $usuario->setPapel($_POST['papel'] ?? '');
+        $resultado = $usuario->salvarUsuario();
+        echo json_encode($resultado);
+      } else {
+        echo json_encode(['status' => 'error', 'message' => 'ID inválido']);
       }
+    } elseif ($acao === 'deletar') {
+      $id = $_POST['id'] ?? '';
+      if ($id) {
+        $usuario = new Usuario();
+        $usuario->setId($id);
+        $resultado = $usuario->deletarUsuario();
+        echo json_encode($resultado);
+      } else {
+        echo json_encode(['status' => 'error', 'message' => 'ID inválido']);
+      }
+    } else {
+      $usuario = new Usuario();
+      $usuario->setNome($_POST['nome'] ?? '');
+      $usuario->setEmail($_POST['email'] ?? '');
+      $usuario->setSenha(password_hash($_POST['senha'] ?? '', PASSWORD_DEFAULT));
+      $usuario->setPapel($_POST['papel'] ?? '');
+      $resultado = $usuario->salvarUsuario();
+      echo json_encode($resultado);
     }
-    return null;
+  } elseif ($method === 'GET') {
+    $usuario = new Usuario();
+    $usuarios = $usuario->listarUsuarios();
+    echo json_encode($usuarios);
+  } else {
+    echo json_encode(['status' => 'error', 'message' => 'Método de requisição inválido']);
   }
+} catch (Exception $e) {
+  echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
 ?>

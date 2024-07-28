@@ -5,6 +5,7 @@ class Usuario
   private $email;
   private $nome;
   private $senha;
+  private $papel;
 
   public function setId($id)
   {
@@ -46,46 +47,90 @@ class Usuario
     return $this->senha;
   }
 
+  public function setPapel($papel)
+  {
+    $this->papel = $papel;
+  }
+
+  public function getPapel()
+  {
+    return $this->papel;
+  }
+
   public function salvarUsuario()
   {
-    $conn = conexao();
-    if ($this->id) {
-      $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, email = ?, senha = ? WHERE id = ?");
-      $stmt->bind_param("sssi", $this->nome, $this->email, $this->senha, $this->id);
-    } else {
-      $stmt = $conn->prepare("INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)");
-      $stmt->bind_param("sss", $this->nome, $this->email, $this->senha);
+    try {
+      $conexao = new Conexao();
+      $conn = $conexao->getConexao();
+      if ($this->id) {
+        $stmt = $conn->prepare("UPDATE usuario SET nome = ?, email = ?, senha = ?, papel = ? WHERE id_usuario = ?");
+        $stmt->execute([$this->getNome(), $this->getEmail(), $this->getSenha(), $this->getPapel(), $this->getId()]);
+      } else {
+        $stmt = $conn->prepare("INSERT INTO usuario (nome, email, senha, papel) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$this->getNome(), $this->getEmail(), $this->getSenha(), $this->getPapel()]);
+      }
+      return ['status' => 'success', 'message' => 'Usuário salvo com sucesso'];
+    } catch (PDOException $th) {
+      return ['status' => 'error', 'message' => $th->getMessage()];
     }
-    $stmt->execute();
-    $stmt->close();
-    $conn->close();
   }
 
   public function deletarUsuario()
   {
-    $conn = conexao();
-    if ($this->id) {
-      $stmt = $conn->prepare("DELETE FROM usuarios WHERE id = ?");
-      $stmt->bind_param("i", $this->id);
-      $stmt->execute();
-      $stmt->close();
+    try {
+      $conexao = new Conexao();
+      $conn = $conexao->getConexao();
+      $stmt = $conn->prepare("DELETE FROM usuario WHERE id_usuario = ?");
+      $stmt->execute([$this->getId()]);
+      return ['status' => 'success', 'message' => 'Usuário deletado com sucesso'];
+    } catch (PDOException $th) {
+      return ['status' => 'error', 'message' => $th->getMessage()];
     }
-    $conn->close();
   }
 
   public static function listarUsuarios()
   {
-    $conn = conexao();
-    $stmt = $conn->prepare("SELECT id, nome, email FROM usuarios");
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $usuarios = [];
-    while ($row = $result->fetch_assoc()) {
-      $usuarios[] = $row;
+    try {
+      $conexao = new Conexao();
+      $conn = $conexao->getConexao();
+      $stmt = $conn->query("SELECT * FROM usuario");
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $th) {
+      return ['status' => 'error', 'message' => $th->getMessage()];
     }
-    $stmt->close();
-    $conn->close();
-    return $usuarios;
   }
+
+  public function listarUsuarioPorId()
+  {
+    try {
+      $conexao = new Conexao();
+      $conn = $conexao->getConexao();
+      $stmt = $conn->prepare("SELECT u.id_usuario, u.nome, u.email, p.papel FROM usuario u INNER JOIN papel p ON u.id_papel = p.id_papel WHERE u.id_usuario = ?");
+      $stmt->execute([$this->getId()]);
+      $result = $stmt->fetch(PDO::FETCH_ASSOC);
+      return $result;
+    } catch (PDOException $th) {
+      return ['status' => 'error', 'message' => $th->getMessage()];
+    }
+  }
+  public function autenticar($senha)
+  {
+    try {
+      $conexao = new Conexao();
+      $conn = $conexao->getConexao();
+      $stmt = $conn->prepare("SELECT * FROM usuario WHERE email = ?");
+      $stmt->execute([$this->getEmail()]);
+      $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+      if ($user && password_verify($senha, $user['senha'])) {
+        return ['status' => 'success', 'message' => 'Usuário autenticado com sucesso', 'usuario' => $user];
+      } else {
+        return ['status' => 'error', 'message' => 'Email ou senha incorretos'];
+      }
+    } catch (PDOException $th) {
+      return ['status' => 'error', 'message' => $th->getMessage()];
+    }
+  }
+
 }
 ?>

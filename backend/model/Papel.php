@@ -34,25 +34,35 @@ class Papel
       $stmt = $conn->prepare("INSERT INTO papel (papel) VALUES (?)");
       $stmt->execute([$this->getPapel()]);
     } catch (PDOException $th) {
-      echo "There is some problem in connection " . $th->getMessage();
-      return false;
+      return ['status' => 'error', 'message' => $th->getMessage()];
     }
-    return true;
+    return ['status' => 'success', 'message' => 'Papel salvo com sucesso'];
   }
+
   public function listarPapeis()
   {
-    $conexao = new Conexao();
-    $conn = $conexao->getConexao();
-    $stmt = $conn->query("SELECT papel FROM papel");
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    try {
+      $conexao = new Conexao();
+      $conn = $conexao->getConexao();
+      $stmt = $conn->query("SELECT * FROM papel");
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $th) {
+      return ['status' => 'error', 'message' => $th->getMessage()];
+    }
   }
+
   public function deletarPapel()
   {
-    $conexao = new Conexao();
-    $conn = $conexao->getConexao();
-    $stmt = $conn->prepare("DELETE FROM papel WHERE id = :id");
-    $stmt->bindParam(":id", $this->getId());
-    $stmt->execute();
+    try {
+      $conexao = new Conexao();
+      $conn = $conexao->getConexao();
+      $stmt = $conn->prepare("DELETE FROM papel WHERE id_papel = :id");
+      $stmt->bindParam(":id", $this->getId(), PDO::PARAM_INT);
+      $stmt->execute();
+    } catch (PDOException $th) {
+      return ['status' => 'error', 'message' => $th->getMessage()];
+    }
+    return ['status' => 'success', 'message' => 'Papel deletado com sucesso'];
   }
 }
 ?>
